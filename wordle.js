@@ -6,6 +6,12 @@ var word = "";
 var wordList = [], guessList = [], excludeSet = new Set();
 var winCount = 0;
 
+// Переменные для контроля рекламы ВКонтакте
+let gamesPlayedSinceAd = 0; 
+let lastAdTime = 0; 
+const AD_COOLDOWN_MS = 3 * 60 * 1000; // 3 минуты в миллисекундах
+const GAMES_BEFORE_AD = 2; // Показывать рекламу не раньше чем через 2 сыгранные игры
+
 // Яндекс SDK переменные
 let ysdk = null;
 let player = null;
@@ -37,25 +43,20 @@ function playSound(audio) {
 // --- 1. ЕДИНАЯ ИНИЦИАЛИЗАЦИЯ ---
 async function initGame() {
     try {
-        // Инициализируем VK Bridge
         vkBridge.send('VKWebAppInit');
         console.log("VK Bridge инициализирован");
 
-        // Загружаем ресурсы (словари)
-        await loadAssets();
+        applyInitialTheme(); // Сразу применяем тему
 
-        // Инициализируем интерфейс
-        initUI();
-        loadWinCount();
+        await loadAssets();  // Грузим слова
+        loadWinCount();      // Грузим счет
 
-        // Реклама перед стартом
-        showFullscreenAd(() => {
-            console.log("Игра готова (Game Ready)");
-            startNewGame(); // Запуск первого раунда
-        });
+        initUI();            // Рисуем интерфейс
+        startNewGame();      // Сразу запускаем игру! БЕЗ РЕКЛАМЫ!
 
     } catch (e) {
-        console.error("Критическая ошибка инициализации:", e);
+        console.error("Ошибка инициализации:", e);
+        applyInitialTheme();
         await loadAssets();
         initUI();
         startNewGame();
@@ -68,22 +69,36 @@ window.onload = initGame;
 // Функцию initYandexSDK УДАЛИ ПОЛНОСТЬЮ
 
 function showFullscreenAd(onComplete) {
-    // ВКонтакте сначала требует проверить наличие рекламы
+    const now = Date.now();
+    
+    // Проверяем условия: прошло ли 3 минуты И сыграл ли игрок хотя бы 2 игры
+    const isCooldownPassed = (now - lastAdTime) >= AD_COOLDOWN_MS;
+    const isGamesPlayed = gamesPlayedSinceAd >= GAMES_BEFORE_AD;
+
+    // Если условия НЕ выполнены (или это самый первый запуск) - пропускаем рекламу
+    if (!isCooldownPassed || !isGamesPlayed) {
+        if (onComplete) onComplete();
+        return;
+    }
+
+    // Если условия выполнены, запрашиваем рекламу
     vkBridge.send('VKWebAppCheckNativeAds', { ad_format: 'interstitial' })
         .then((data) => {
             if (data.result) {
-                // Если реклама есть — показываем
                 vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
                     .then(() => {
-                        console.log("Реклама закрыта");
+                        console.log("Реклама успешно показана");
+                        // Сбрасываем счетчики после успешного показа
+                        lastAdTime = Date.now();
+                        gamesPlayedSinceAd = 0;
                         if (onComplete) onComplete();
                     })
                     .catch((err) => {
                         console.error("Ошибка показа рекламы VK:", err);
-                        if (onComplete) onComplete();
+                        if (onComplete) onComplete(); // Если ошибка - просто продолжаем игру
                     });
             } else {
-                console.log("Реклама ВКонтакте сейчас недоступна");
+                console.log("Рекламы сейчас нет");
                 if (onComplete) onComplete();
             }
         })
@@ -245,18 +260,29 @@ function updateGameState(guess) {
         const isWin = evaluation.every(s => s === 'correct');
         const isLoss = !isWin && (row === height - 1);
 
-        if (isWin) {
+if (isWin) {
             winCount++;
             saveWinCount();
             updateTitleScore();
             displayMessage("Правильно!", 3000);
             danceRow(currentRow);
             playSound(successSound);
-            setTimeout(startNewGame, 3500);
+            
+            gamesPlayedSinceAd++; // Увеличиваем счетчик сыгранных игр
+            
+            setTimeout(() => {
+                showFullscreenAd(startNewGame); // Пробуем показать рекламу перед новой игрой
+            }, 3500);
+            
         } else if (isLoss) {
             displayMessage(`Было слово: ${word}`, 5000);
             playSound(failSound);
-            setTimeout(startNewGame, 5500);
+            
+            gamesPlayedSinceAd++; // Увеличиваем счетчик сыгранных игр
+            
+            setTimeout(() => {
+                showFullscreenAd(startNewGame); // Пробуем показать рекламу перед новой игрой
+            }, 5500);
         } else {
             // Игра продолжается на следующей строке
             gameOver = false;
