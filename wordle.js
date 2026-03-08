@@ -71,7 +71,22 @@ async function initGame() {
         startNewGame();
     }
 }
-
+function showBanner() {
+    // Проверяем, существует ли вообще vkBridge (на случай запуска вне ВК)
+    if (typeof vkBridge !== 'undefined') {
+        vkBridge.send('VKWebAppShowBannerAd', {
+            banner_location: 'bottom'
+        })
+        .then((data) => {
+            if (data.result) {
+                console.log("Баннер успешно показан");
+            }
+        })
+        .catch((err) => {
+            console.error("Ошибка при показе баннера:", err);
+        });
+    }
+}
 // Привязываем запуск к загрузке окна
 window.onload = initGame;
 
