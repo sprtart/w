@@ -9,13 +9,14 @@ var winCount = 0;
 // Переменные для контроля рекламы ВКонтакте
 let gamesPlayedSinceAd = 0; 
 let lastAdTime = 0; 
-const AD_COOLDOWN_MS = 3 * 60 * 1000; // 3 минуты в миллисекундах
-const GAMES_BEFORE_AD = 2; // Показывать рекламу не раньше чем через 2 сыгранные игры
+const AD_COOLDOWN_MS = 4 * 60 * 1000; // 3 минуты в миллисекундах
+const GAMES_BEFORE_AD = 3; // Показывать рекламу не раньше чем через 2 сыгранные игры
 
 // Яндекс SDK переменные
 let ysdk = null;
 let player = null;
 let adPreloadInterval = null; 
+let audioContextUnlocked = false;
 
 
 let clickSound = new Audio('assets/sounds/tap.mp3');
@@ -71,6 +72,19 @@ async function initGame() {
         startNewGame();
     }
 }
+
+function unlockAudio() {
+    if (audioContextUnlocked) return;
+
+    // Пытаемся "проиграть" пустые звуки, чтобы браузер понял, что пользователь разрешил звук
+    clickSound.play().then(() => {
+        clickSound.pause();
+        clickSound.currentTime = 0;
+        audioContextUnlocked = true;
+        console.log("Звук разблокирован");
+    }).catch(e => console.log("Звук все еще заблокирован до первого клика"));
+}
+
 function showBanner() {
     // Проверяем, существует ли вообще vkBridge (на случай запуска вне ВК)
     if (typeof vkBridge !== 'undefined') {
@@ -409,6 +423,7 @@ function initUI() {
     
     initializeBoardAndKeyboard();
     applyInitialTheme();
+    document.body.addEventListener('pointerdown', unlockAudio, { once: true });
 }
 
 function processPhysicalKeyPress(e) { processInput(e); }
