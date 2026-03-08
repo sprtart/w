@@ -9,8 +9,8 @@ var winCount = 0;
 // Переменные для контроля рекламы ВКонтакте
 let gamesPlayedSinceAd = 0; 
 let lastAdTime = 0; 
-const AD_COOLDOWN_MS = 3 * 60 * 1000; // 3 минуты в миллисекундах
-const GAMES_BEFORE_AD = 2; // Показывать рекламу не раньше чем через 2 сыгранные игры
+const AD_COOLDOWN_MS = 4 * 60 * 1000; // 3 минуты в миллисекундах
+const GAMES_BEFORE_AD = 3; // Показывать рекламу не раньше чем через 2 сыгранные игры
 
 // Яндекс SDK переменные
 let ysdk = null;
@@ -553,3 +553,4 @@ window.addEventListener('touchstart', function(e) {
 window.addEventListener('touchmove', function(e) {
     e.preventDefault();
 }, { passive: false });
+
