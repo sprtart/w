@@ -9,13 +9,13 @@ var winCount = 0;
 // Переменные для контроля рекламы ВКонтакте
 let gamesPlayedSinceAd = 0; 
 let lastAdTime = 0; 
-const AD_COOLDOWN_MS = 4 * 60 * 1000; // 3 минуты в миллисекундах
-const GAMES_BEFORE_AD = 3; // Показывать рекламу не раньше чем через 2 сыгранные игры
+const AD_COOLDOWN_MS = 3 * 60 * 1000; // 3 минуты в миллисекундах
+const GAMES_BEFORE_AD = 2; // Показывать рекламу не раньше чем через 2 сыгранные игры
 
 // Яндекс SDK переменные
 let ysdk = null;
 let player = null;
-
+let adPreloadInterval = null; 
 
 
 let clickSound = new Audio('assets/sounds/tap.mp3');
@@ -38,26 +38,35 @@ function playSound(audio) {
     // Используем промис, чтобы не ждать ответа от аудио-движка
     audio.play().catch(() => {}); 
 }
-
+function preloadAds() {
+    vkBridge.send('VKWebAppCheckNativeAds', { ad_format: 'interstitial' })
+        .catch(e => console.log("Фоновая предзагрузка:", e));
+}
 
 // --- 1. ЕДИНАЯ ИНИЦИАЛИЗАЦИЯ ---
 async function initGame() {
     try {
         vkBridge.send('VKWebAppInit');
-        console.log("VK Bridge инициализирован");
+        applyInitialTheme();
 
-        applyInitialTheme(); // Сразу применяем тему
+        await loadAssets();
+        loadWinCount();
+        initUI();
 
-        await loadAssets();  // Грузим слова
-        loadWinCount();      // Грузим счет
+        // 1. Показываем баннер (согласно п. 5.1.4.1 «б»)
+        showBanner();
 
-        initUI();            // Рисуем интерфейс
-        startNewGame();      // Сразу запускаем игру! БЕЗ РЕКЛАМЫ!
+        // 2. Первый вызов предзагрузки сразу
+        preloadAds();
+        
+        // 3. Запускаем таймер для фоновой предзагрузки раз в минуту (согласно рекомендациям VK)
+        adPreloadInterval = setInterval(preloadAds, 60000);
+
+        // 4. Запускаем игру
+        startNewGame();
 
     } catch (e) {
         console.error("Ошибка инициализации:", e);
-        applyInitialTheme();
-        await loadAssets();
         initUI();
         startNewGame();
     }
@@ -71,41 +80,26 @@ window.onload = initGame;
 function showFullscreenAd(onComplete) {
     const now = Date.now();
     
-    // Проверяем условия: прошло ли 3 минуты И сыграл ли игрок хотя бы 2 игры
-    const isCooldownPassed = (now - lastAdTime) >= AD_COOLDOWN_MS;
-    const isGamesPlayed = gamesPlayedSinceAd >= GAMES_BEFORE_AD;
-
-    // Если условия НЕ выполнены (или это самый первый запуск) - пропускаем рекламу
-    if (!isCooldownPassed || !isGamesPlayed) {
-        if (onComplete) onComplete();
+    // Проверки (кулдаун 5 минут, 3 игры)
+    if ((now - lastAdTime) < AD_COOLDOWN_MS || gamesPlayedSinceAd < GAMES_BEFORE_AD) {
+        onComplete();
         return;
     }
 
-    // Если условия выполнены, запрашиваем рекламу
-    vkBridge.send('VKWebAppCheckNativeAds', { ad_format: 'interstitial' })
+    // По правилам: показ ТОЛЬКО при смене экрана/уровня
+    // Мы не вызываем Check внутри показа, мы просто вызываем Show, 
+    // так как мы сделали предзагрузку в фоне по таймеру.
+    vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
         .then((data) => {
             if (data.result) {
-                vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
-                    .then(() => {
-                        console.log("Реклама успешно показана");
-                        // Сбрасываем счетчики после успешного показа
-                        lastAdTime = Date.now();
-                        gamesPlayedSinceAd = 0;
-                        if (onComplete) onComplete();
-                    })
-                    .catch((err) => {
-                        console.error("Ошибка показа рекламы VK:", err);
-                        if (onComplete) onComplete(); // Если ошибка - просто продолжаем игру
-                    });
+                lastAdTime = Date.now();
+                gamesPlayedSinceAd = 0;
+                onComplete();
             } else {
-                console.log("Рекламы сейчас нет");
-                if (onComplete) onComplete();
+                onComplete();
             }
         })
-        .catch((error) => {
-            console.error('Ошибка проверки рекламы VK:', error);
-            if (onComplete) onComplete();
-        });
+        .catch(() => onComplete());
 }
 
 // Загрузка слов
@@ -553,4 +547,3 @@ window.addEventListener('touchstart', function(e) {
 window.addEventListener('touchmove', function(e) {
     e.preventDefault();
 }, { passive: false });
-
