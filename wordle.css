@@ -1,0 +1,758 @@
+* {
+    touch-action: none; 
+    -webkit-user-select: none;  /* Safari */
+    -ms-user-select: none;      /* IE/Edge */
+    user-select: none;          /* Standard */
+    -webkit-tap-highlight-color: transparent; /* Убирает синий квадрат при клике на мобильных */
+    -webkit-touch-callout: none; /* Запрещает системное меню при долгом нажатии в iOS */
+}
+
+/* Разрешаем выделение только в полях ввода, если они когда-нибудь появятся */
+input, textarea {
+    user-select: text;
+    -webkit-user-select: text;
+}
+html, body {
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    overflow: hidden;
+    height: 100%;
+    /* Добавляем фикс для Safari: */
+    position: fixed; 
+    width: 100%;
+    -webkit-overflow-scrolling: touch; 
+
+}
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #ffffff; /* Немного фона для контраста */
+    color: #333;
+    min-height: 100vh;
+    justify-content: center;
+    margin: 0;
+
+
+        /* Запрещает pull-to-refresh (обновление страницы потянув вниз) */
+    overscroll-behavior-y: none; 
+    /* Фиксирует экран */
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    /* Улучшает отрисовку шрифтов */
+    -webkit-font-smoothing: antialiased;
+    /*gap: 1vh;*/
+}
+
+
+/* Flip animation */
+/* Flip animation */
+@keyframes flip {
+  0% {
+    transform: rotateX(0deg);
+  }
+  45% {
+    transform: rotateX(90deg);
+  }
+  55% {
+    transform: rotateX(90deg);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+.tile.flip {
+  animation: flip 0.6s ease;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* Add these properties to your existing tile states */
+.tile.correct {
+  transition: background-color 0s;
+}
+
+.tile.present {
+  transition: background-color 0s;
+}
+
+.tile.absent {
+  transition: background-color 0s;
+}
+
+hr {
+    /*width: 90%; /* Сделаем немного шире для адаптивности */
+    max-width: 500px;
+    border: 0;
+    border-top: 1px solid #ccc;
+}
+
+/* --- ЗАМЕНИТЕ ЭТИ СТИЛИ В ВАШЕМ CSS-ФАЙЛЕ --- */
+
+#title-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    /* Магия адаптивности: берет vh на ПК, но переключается на vw на телефонах */
+    width: min(46vh, 90vw); 
+    margin-bottom: 1.5vh;
+    margin-top: 1.5vh;
+}
+
+#title {
+    margin: 0;
+    font-size: min(4.5vh, 10vw);
+    font-weight: bold;
+    letter-spacing: 0.2vh;
+    height: min(4.5vh, 9vw);
+    line-height: min(4.5vh, 9vw);
+    color: #ffffff;
+    transition: color 0.3s ease;
+    text-transform: uppercase;
+    background-color: #6aaa64;
+    padding: 1vh 1.5vh;
+    border-radius: 1vh;
+    
+}
+
+#help-button, #theme-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #787c7e;
+    border-radius: 50%;
+    width: min(5vh, 10vw);
+    height: min(5vh, 10vw);
+    font-size: min(4vh, 7vw);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background-color 0.2s;
+    font-weight: 600;
+}
+#help-button { left: 0; }
+#theme-button { right: 0; }
+
+#help-button:hover {
+    background-color: #eee;
+}
+
+/* --- ДОБАВЬТЕ ЭТИ НОВЫЕ СТИЛИ В КОНЕЦ ФАЙЛА --- */
+
+#theme-button {
+    /* Почти полная копия #help-button */
+    position: absolute;
+    right: 0; /* !!! ВАЖНО: Прижимаем к правому краю */
+    top: 50%;
+    transform: translateY(-50%);
+
+    background: none;
+    border: none;
+    color: #787c7e;
+    border-radius: 50%;
+    width: 5vh;
+    height: 5vh;
+    font-size: 3vh; /* Иконка может быть чуть меньше для баланса */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background-color 0.2s;
+}
+#theme-button:hover {
+    background-color: #eee;
+}
+
+
+/* Полное исправление для примеров в модальном окне */
+/* Базовый размер для плитки-примера */
+.tile.example {
+    width: 40px !important; 
+    height: 40px !important;
+    flex: none !important; /* Чтобы не сжимались */
+    display: flex !important;
+    border-radius: 4px;
+    font-size: 20px;
+    border: 2px solid #d3d6da;
+    background-color: #fff; /* Фон для светлой темы */
+    color: #000;
+}
+
+/* Принудительные цвета для примеров в модалке */
+#help-modal .tile.correct {
+    background-color: #6aaa64 !important;
+    border-color: #6aaa64 !important;
+    color: #ffffff !important;
+}
+
+#help-modal .tile.present {
+    background-color: #c9b458 !important;
+    border-color: #c9b458 !important;
+    color: #ffffff !important;
+}
+
+#help-modal .tile.absent {
+    background-color: #787c7e !important;
+    border-color: #787c7e !important;
+    color: #ffffff !important;
+}
+/* Темная тема для примеров */
+body.dark-theme .tile.example:not(.correct):not(.present):not(.absent) {
+    background-color: #121213;
+    border-color: #3a3a3c;
+    color: #ffffff;
+}
+
+/* Настройка самой строки с примерами */
+.example-row {
+    display: flex;
+    gap: 8px;
+    margin: 15px 0;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+
+/* Поддержка темной темы для примеров */
+body.dark-theme #help-modal .tile.example:not(.correct):not(.present):not(.absent) {
+    background-color: #121213;
+    border-color: #3a3a3c;
+    color: white;
+}
+/* Добавляем базовый белый фон для обычных примеров */
+.tile.example:not(.correct):not(.present):not(.absent) {
+    background-color: #fff;
+}
+/* ------------------------------------------------------- */
+
+/* --- НОВОЕ: Стили для модального окна --- */
+#modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Полупрозрачный фон */
+    z-index: 1000; /* Выше остального контента */
+    opacity: 0; /* Начальная прозрачность */
+    transition: opacity 0.3s ease; /* Плавное появление */
+}
+
+#help-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -60%); /* Сдвигаем чуть выше центра, начальное положение */
+    background-color: #fff;
+    padding: 2.5vh 3vh;
+    border-radius: 1vh;
+    z-index: 1001; /* Выше фона */
+    width: 90%;
+    max-width: 480px; /* Макс ширина окна */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    opacity: 0; /* Начальная прозрачность */
+    transition: opacity 0.3s ease, transform 0.3s ease; /* Плавное появление и сдвиг */
+    text-align: left; /* Выравнивание текста в окне */
+    line-height: 1.6;
+    font-size: 1.6vh; /* Размер шрифта для текста */
+}
+
+#help-modal h2 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 1.5vh;
+    color: #333;
+}
+#help-modal p {
+    margin-bottom: 1vh;
+    color: #555;
+}
+#help-modal strong {
+    color: #333;
+}
+.modal-hr {
+    border: 0;
+    border-top: 0.2 vh solid #eee;
+    margin: 2vh 0;
+}
+
+#close-modal-button {
+    position: absolute;
+    top: 1vh;
+    right: 1.5vh;
+    background: none;
+    border: none;
+    font-size: 4vh;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+#close-modal-button:hover {
+    color: #777;
+}
+
+/* Класс для показа модалки */
+#modal-overlay:not(.modal-hidden),
+#help-modal:not(.modal-hidden) {
+    opacity: 1;
+    pointer-events: auto; /* Разрешаем взаимодействие */
+}
+#help-modal:not(.modal-hidden) {
+     transform: translate(-50%, -50%); /* Центрируем при показе */
+}
+
+/* Класс для скрытия модалки */
+.modal-hidden {
+    opacity: 0;
+    pointer-events: none; /* Игнорируем клики */
+}
+#help-modal.modal-hidden {
+    transform: translate(-50%, -60%); /* Возвращаем начальное положение для анимации */
+}
+
+
+#board {
+    width: min(48vh, 90vw);
+    aspect-ratio: 5 / 6; /* Жестко фиксируем пропорции всего поля */
+    margin: 1vh auto;
+    display: grid; /* Сетка вместо flex */
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    gap: 1.5%; /* Отступы в процентах от ширины поля */
+    /*padding: 1.5%;*/
+    box-sizing: border-box;
+}
+
+.tile {
+    /* Размеры теперь контролируются сеткой (grid) */
+    width: 100%;
+    height: 100%;
+    /*border: 0.3vmin solid #d3d6da; /* vmin - адаптивная толщина рамки */
+    border-radius: 1vmin;
+    /*background-color: #d3d6da;*/
+    box-sizing: border-box;
+
+    /* Text */
+    color: black;
+    font-size: min(4.5vh, 9vw); /* Шрифт уменьшается вместе с плиткой */
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-transform: uppercase;
+    user-select: none;
+
+     -webkit-tap-highlight-color: transparent;
+}
+
+/* Цвет пустой плитки по умолчанию (для поля) */
+#board .tile {
+    background-color: #d3d6da;
+}
+body.dark-theme #board .tile {
+    background-color: #272727;
+}
+
+
+/* --- НОВОЕ: Стиль для активной (выбранной) ячейки --- */
+.tile.current-row {
+    cursor: pointer; /* Курсор для ячеек текущей строки */
+}
+.tile.selected {
+    border-color: #6aaa64; /* Зеленая рамка для выделения */
+    /*box-shadow: inset 0 0 0 2px #6aaa64; /* Или внутренняя тень */
+}
+
+
+
+/* --- Эффект наведения для ячеек текущей строки --- */
+
+/* В светлой теме */
+.tile.current-row:not(.selected):hover {
+    background-color: #acb0b5; /* Легкий серый оттенок, как у кнопок */
+    border-color: #b4b8bb;     /* Чуть более темная рамка */
+    cursor: pointer;
+}
+
+/* В темной теме */
+body.dark-theme .tile.current-row:not(.selected):hover {
+    background-color: #363636; /* Темный оттенок для наведения в темной теме */
+    border-color: #565758;
+    cursor: pointer;
+}
+
+/* Убираем стандартный курсор-текст (I-bar), чтобы ячейка ощущалась как кнопка */
+.tile.current-row {
+    cursor: pointer;
+}
+
+
+
+/* Стили состояний плиток и клавиш */
+.correct {
+    background-color: #6aaa64 !important; /* Зеленый */
+    color: white;
+    border-color: #6aaa64 !important;
+}
+
+.present {
+    background-color: #c9b458 !important; /* Желтый */
+    color: white;
+    border-color: #c9b458 !important;
+}
+
+.absent {
+    background-color: #979b9d !important; /* Серый */
+    color: white;
+    border-color: #787c7e;
+}
+
+.key-tile, .enter-key-tile, .tile {
+    /* Это говорит браузеру: "Не жди двойного клика, я сам управляю тапами" */
+    touch-action: manipulation; 
+    
+    /* Отключаем системное копирование/выделение при долгом зажатии */
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* --- Клавиатура --- */
+#keyboard-container {
+       touch-action: none; 
+    margin: 1.5vh auto 0 auto;
+    width: 100%; /* Занимает 100% доступного места */
+    max-width: min(90vh, 100vw); /* На ПК не будет огромной, на телефоне займет весь экран */
+    padding: 0 2vw; /* Крошечные отступы от краев экрана */
+    box-sizing: border-box;
+}
+
+.keyboard-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: min(0.6vh, 2vw);
+    gap: 0.8%; /* Отступы между клавишами в процентах (всегда пропорциональны) */
+    width: 100%;
+    touch-action: manipulation;
+}
+
+/* МАГИЯ ПРОПОРЦИЙ: 
+   В 1-м ряду 13 клавиш.
+   Во 2-м ряду 11 клавиш. Чтобы их размер совпал с 1-м рядом, добавим 2 "пустые" доли по краям.
+   В 3-м ряду 9 клавиш + 2 широкие (Enter, Backspace). Добавим по половинке доли по краям. */
+/*.keyboard-row:nth-child(2)::before,
+.keyboard-row:nth-child(2)::after {
+    content: '';
+    flex: 1;
+}
+.keyboard-row:nth-child(3)::before,
+.keyboard-row:nth-child(3)::after {
+    content: '';
+    flex: 0.2;
+}*/
+
+#Backspace.enter-key-tile {
+    flex: 2.1; /* Он будет шире обычных букв */
+    /*background-color: #a7a9ab; /* Сделаем его чуть темнее обычных клавиш для акцента */
+}
+
+.key-tile, .enter-key-tile {
+height: min(8vh, 14vw);
+    margin: 0;
+    border: none;
+    border-radius: 0.8vmin;
+    background-color: #737779;
+    cursor: pointer;
+    font-size: min(4vh, 5.5vw);
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    transition: background-color 0.1s ease;
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    color: white;
+}
+
+.enter-key-tile {
+    flex: 1.5; /* Enter и Backspace в полтора раза шире обычных букв */
+    font-size: min(1.8vh, 3.5vw); /* Шрифт на Enter делаем чуть меньше */
+}
+
+/* Эффект наведения ТОЛЬКО для базовых (не цветных) кнопок */
+.key-tile:not(.correct):not(.present):not(.absent):hover, 
+.enter-key-tile:not(.correct):not(.present):not(.absent):hover {
+    background-color: #b4b8bb;
+}
+
+
+/* Цветные стили для клавиш (переопределяют базовые) */
+.key-tile.correct, .enter-key-tile.correct { background-color: #6aaa64; color: white; }
+.key-tile.present, .enter-key-tile.present { background-color: #c9b458; color: white; }
+.key-tile.absent, .enter-key-tile.absent { background-color: #acb0b5 !important; color: white; }
+/* --- Анимации --- */
+
+/* Анимация "тряски" для неверного слова */
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+.shake {
+  animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
+  /* Свойства ниже могут помочь с производительностью */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Анимация "танца" при победе */
+@keyframes dance {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); } /* Небольшой подскок */
+}
+
+.dance {
+  animation: dance 0.5s ease-in-out;
+  animation-delay: var(--animation-delay, 0s); /* Для задержки, если нужно */
+}
+
+
+
+/* --- Уведомления (Toasts) --- */
+#toast-container {
+    position: fixed;
+    top: 37%; /* Появляются чуть ниже заголовка */
+    left: 50%;
+    transform: translateX(-50%); /* Центрируем по горизонтали */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1vh; /* Расстояние, если уведомлений несколько */
+    z-index: 2000; /* Поверх всего интерфейса и модалок */
+    pointer-events: none; /* Пропускает клики сквозь себя (чтобы не мешать играть) */
+    width: 100%;
+}
+
+.toast {
+    background-color: rgba(0, 0, 0, 0.85); /* Полупрозрачный черный */
+    color: #fff;
+    padding: min(2.5vh, 4vw) min(3vh, 5vw);
+    border-radius: 0.8vmin;
+    font-size: min(2.2vh, 4.5vw);
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    text-align: center;
+    max-width: 90%; /* Чтобы длинный текст не упирался в края на телефоне */
+}
+
+.toast.show {
+    opacity: 1;
+}
+
+
+/* =========================================
+   ТЕМНАЯ ТЕМА (DARK THEME)
+   ========================================= */
+
+body.dark-theme {
+    background-color: #121213;
+    color: #d7dadc;
+}
+
+body.dark-theme #title {
+    color: #ffffff;
+        background-color: #272727;
+}
+
+body.dark-theme #help-button,
+body.dark-theme #theme-button {
+    color: #d7dadc;
+}
+
+body.dark-theme #help-button:hover,
+body.dark-theme #theme-button:hover {
+    background-color: #272729;
+}
+
+/* Плитки игрового поля */
+body.dark-theme .tile {
+    background-color: #272727;
+    border-color: #3a3a3c;
+    color: #ffffff;
+}
+
+/* Модальное окно "Как играть" */
+body.dark-theme #help-modal {
+    background-color: #121213;
+    border: 1px solid #3a3a3c;
+    color: #d7dadc;
+    box-shadow: 0 4px 23px 0 rgba(0, 0, 0, 0.9);
+}
+
+body.dark-theme #help-modal h2,
+body.dark-theme #help-modal strong {
+    color: #ffffff;
+}
+
+body.dark-theme #help-modal p {
+    color: #d7dadc;
+}
+
+body.dark-theme .modal-hr {
+    border-top-color: #3a3a3c;
+}
+
+body.dark-theme .tile.example:not(.correct):not(.present):not(.absent) {
+    background-color: #121213;
+    border-color: #3a3a3c;
+    color: #ffffff;
+}
+
+/* Клавиатура */
+body.dark-theme .key-tile, 
+body.dark-theme .enter-key-tile {
+    background-color: #3f3f3f; /* Светло-серый для не нажатых кнопок */
+    color: #efefef;
+}
+
+body.dark-theme .key-tile:not(.correct):not(.present):not(.absent):hover, 
+body.dark-theme .enter-key-tile:not(.correct):not(.present):not(.absent):hover {
+    background-color: #565758 ; /* Затемнение при наведении */
+}
+
+/* "Отсутствующие" буквы (серые) в темной теме должны быть темнее */
+body.dark-theme .tile.absent,
+body.dark-theme .key-tile.absent,
+body.dark-theme .enter-key-tile.absent,
+body.dark-theme #help-modal .tile.example.absent {
+    background-color: #212121 !important;
+    border-color: #3a3a3c;
+}
+
+
+
+/* =========================================
+   АНИМИРОВАННАЯ КНОПКА СМЕНЫ ТЕМЫ
+   ========================================= */
+
+/* --- Анимации самой иконки --- */
+.theme-icon {
+    width: 70%; /* Размер относительно нашей адаптивной кнопки */
+    height: 70%;
+    /* Пружинистая анимация вращения всей иконки */
+    transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Центральный круг (основа солнца/луны) */
+.center-circle {
+    transition: r 0.4s ease;
+}
+
+/* Невидимый круг-маска, который "откусывает" кусок солнца, делая луну */
+.mask-circle {
+    transition: cx 0.4s ease, cy 0.4s ease;
+    cx: 30; 
+    cy: 5;
+}
+
+/* Лучи солнца */
+.sun-rays {
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    transform-origin: 12px 12px; /* Центр SVG */
+}
+
+/* --- СОСТОЯНИЕ ЛУНЫ (Темная тема) --- */
+body.dark-theme .theme-icon {
+    transform: rotate(-100deg); /* Эффектно поворачиваем */
+}
+
+body.dark-theme .center-circle {
+    r: 9; /* Увеличиваем круг */
+}
+
+body.dark-theme .mask-circle {
+    cx: 15; /* Сдвигаем маску влево-вниз... */
+    cy: 8;  /* ...чтобы вырезать красивый полумесяц! */
+}
+
+body.dark-theme .sun-rays {
+    opacity: 0; /* Лучи исчезают */
+    transform: scale(0.3) rotate(45deg); /* Стягиваются в центр */
+}
+
+/* Цвет кнопки в темной теме (если он еще не задан выше) */
+body.dark-theme #theme-button {
+    color: #d7dadc;
+}
+
+body.dark-theme #theme-button:hover {
+    color: #ffffff;
+}
+
+/* --- Простое выделение выбранной ячейки цветом --- */
+
+.tile.selected {
+    border-color: #6aaa64 !important; /* Зеленая рамка */
+    background-color: #acb0b5  !important; /* Очень бледный зеленый фон для светлой темы */
+    z-index: 2;
+}
+
+/* Выделение в темной теме */
+body.dark-theme .tile.selected {
+    border-color: #538d4e !important;
+    background-color: #363636 !important; /* Глубокий темно-зеленый для темной темы */
+}
+
+
+
+
+
+
+/* Стиль для кнопки Backspace */
+#Backspace.enter-key-tile {
+    background-color: #787c7e;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Стили для самой иконки внутри кнопки */
+#Backspace svg {
+    width: min(3.5vh, 6vw); /* Адаптивный размер иконки */
+    height: auto;
+    display: block;
+    pointer-events: none; /* Чтобы клик регистрировался на кнопке, а не на иконке */
+}
+
+/* Ховер для Backspace */
+#Backspace:hover {
+    background-color: #808284;
+}
+
+/* Цвет Backspace в темной теме */
+body.dark-theme #Backspace {
+    background-color: #4b4b4e;
+}
+body.dark-theme #Backspace:hover {
+    background-color: #5a5a5d;
+}
